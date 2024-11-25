@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.enp.dataharvester.api.dto.ScraperTaskDTO;
 import com.enp.dataharvester.api.entity.ScraperTask;
+import com.enp.dataharvester.api.service.ScraperTaskService;
 
 @RestController
 @RequestMapping("/api/tasks")
