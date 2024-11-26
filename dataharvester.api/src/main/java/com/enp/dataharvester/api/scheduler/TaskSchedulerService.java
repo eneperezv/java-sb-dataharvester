@@ -1,5 +1,6 @@
 package com.enp.dataharvester.api.scheduler;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -28,31 +29,31 @@ public class TaskSchedulerService {
         this.scrapedDataRepository = scrapedDataRepository;
     }
 
-    @Scheduled(fixedRate = 60000) // Ejecuta cada minuto
-    public void scheduleTasks() {
+    @Scheduled(fixedRate = 60000) // Ejecutar cada minuto
+    public void scheduleTasks() throws IOException {
         List<ScraperTask> tasks = scraperTaskRepository.findPendingTasks();
         tasks.forEach(task -> {
             try {
-                // Ejecutar scraping para la URL especificada
-                String data = scraperService.executeScraping(task.getTargetUrl());
+                // Lógica de scraping
+                String scrapedContent = scraperService.executeScraping(task.getTargetUrl());
 
-                // Guardar los datos extraídos en la base de datos
+                // Guardar los datos en la base de datos
                 ScrapedData scrapedData = new ScrapedData();
                 scrapedData.setScraperTask(task);
-                scrapedData.setContent(data);
+                scrapedData.setContent(scrapedContent);
                 scrapedData.setScrapedAt(LocalDateTime.now());
                 scrapedDataRepository.save(scrapedData);
 
-                // Actualizar el estado y la próxima ejecución
+                // Actualizar estado y próxima ejecución
                 task.setStatus(TaskStatus.COMPLETED);
                 task.setLastExecuted(LocalDateTime.now());
                 task.setNextScheduled(LocalDateTime.now().plusMinutes(task.getFrequencyInMinutes()));
                 scraperTaskRepository.save(task);
             } catch (Exception e) {
-                // Manejar errores de scraping
+                // Manejar errores
                 task.setStatus(TaskStatus.ERROR);
                 scraperTaskRepository.save(task);
-                System.err.println("Error ejecutando scraping para la tarea ID " + task.getId() + ": " + e.getMessage());
+                System.err.println("Error en scraping para la tarea ID " + task.getId() + ": " + e.getMessage());
             }
         });
     }
